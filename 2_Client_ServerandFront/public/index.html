@@ -1,0 +1,186 @@
+<html>
+  <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.4.4/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.4.4/addons/p5.dom.js"></script>
+    <script
+      src="https://code.jquery.com/jquery-3.1.1.min.js"
+      integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+      crossorigin="anonymous"></script>
+
+    <title></title>
+  </head>
+  <body>
+    <h2 id="hi"></h2>
+    <div id="loginForm">
+    Username:  <input type="text" id="username" value=""><br />
+     <input type="text" id="token" value=""><br />
+    <input id="login" type="submit" value="login"><br />
+    <input id="logout" type="submit" value="logout">
+    </div>
+
+
+    <div id="claimBeaconForm">
+    Claim Beacon
+    name:  <input type="text" id="localname" value=""><br />
+    rssi:  <input type="text" id="rssi" value=""><br />
+    characteristic:  <input type="text" id="characteristic" value=""><br />
+    characteristic value: <input type="text" id="points" value=""><br />
+    <input id="claimBeacon" type="submit" value="beacon">
+    </div>
+
+    <div id="message"></div>
+    <div id="error"></div>
+    <button type="button" id="start-scan" style="display:none" name="button">START SCANNING!</button>
+
+
+
+    <script type="text/javascript">
+    var tokenUuid, errorDisplay, messageDisplay, service,
+    loginButton, logoutButton, claimBeaconButton, claimBeaconForm;
+    var greeting;
+
+
+$(document).ready(function() {
+// function setup() {
+//       noCanvas();
+
+
+//my heroku server: https://arcane-sea-27967.herokuapp.com/
+//Nicole's code: https://gist.github.com/nicolehe/40005beb71cd97e49a0e67aed1c00f7d#file-index-html-L20
+
+      tokenUuid = document.getElementById('token');
+      tokenUuid.style.display = "none"
+      errorDisplay = document.getElementById('error');
+      messageDisplay = document.getElementById('message');
+      loginButton = document.getElementById('login');
+      logoutButton = document.getElementById('logout');
+      claimBeaconButton = document.getElementById('claimBeacon');
+      claimBeaconForm = document.getElementById("claimBeaconForm")
+      greeting = document.getElementById('hi')
+      claimBeaconForm.style.display = "none"
+      logoutButton.style.display = "none"
+      loginButton.addEventListener('click', login, false);
+      logoutButton.addEventListener('click', login, false);
+      claimBeaconButton.addEventListener('click', claimBeacon, false);
+
+      $('#start-scan').click(function(e) {
+        e.preventDefault();
+        // console.log(service.value)
+        $.ajax({
+          type: 'POST',
+          data: {
+                 start: "yes",
+                 char: characteristic.value,
+                 token: tokenUuid.value,
+                 service: service
+
+
+               },
+          success: function(data) {console.log(data)},
+          error: function(){console.log('posting to scan not working') },
+          url: '/scan',
+          cache:false
+        });
+      });
+
+
+    });
+
+    // logs user into or out of server:
+    function login(command) {
+      // console.log(event.target.id)
+      //pass the mouse event then name the route that target name (from the html)
+      var command = '/' + event.target.id; // get path from button name
+      // console.log(command)
+      var request = {
+        username:username.value          // send user name
+      };
+
+      if (command === '/logout') {
+        // console.log('logged out')
+        loginButton.style.display = "block"
+        logoutButton.style.display = "none"
+        // adminDisplay.innerHTML = null;    // clear admin display
+        // adminControls.hidden = true;      // hide admin controls
+        username.value = null;            // clear username
+        request.token = tokenUuid.value;  // only need token if logging out
+        document.getElementById('hi').innerHTML = ''
+
+      }
+      if (command == '/login'){
+        // console.log('logged in')
+        // console.log(request)
+        loginButton.style.display = "none"
+        logoutButton.style.display = "block"
+        document.getElementById('start-scan').style.display = "block"
+        document.getElementById('hi').innerHTML = 'Hi '+ request.username
+      }
+
+
+
+        // make the HTTP POST call:
+        $.ajax({
+          type: 'POST',
+          data: request,
+          success: getResponse,
+          error: function(){console.log('posting to scan not working') },
+          url: command,
+          cache:false
+        });
+
+
+    } // end of login/logout function
+
+
+    // update page with server's response:
+    function getResponse(data) {
+      console.log(data)
+      show(data);
+      service = data.service;
+      tokenUuid.value = data.token;
+      //where does this variable 'characteristic.value' come from?
+      characteristic.value = data.characteristic;
+
+
+
+    }
+
+
+
+    // make the POST request to the server to claim a beacon:
+    function claimBeacon(command) {
+      var command = '/beacon';
+      var request = {               // get all data from user fields
+        token: token.value,
+        localname:  localname.value,
+        rssi: rssi.value,
+        characteristic: characteristic.value,
+        points: points.value,
+        service: service.value
+      };
+
+      // make the HTTP POST call:
+      httpPost(command, request, 'json', show);
+    }   // end of claimBeacon function
+
+
+    function show(data) {
+      // if there's an error, use the error div:
+      if (data.error) {
+        error.innerHTML = JSON.stringify(data);
+        messageDisplay.innerHTML = null;
+      } else {
+        // if there's no error, use the message div:
+        messageDisplay.innerHTML = JSON.stringify(data);
+        error.innerHTML = null;
+      }
+    }
+
+
+
+
+
+
+      </script>
+  </body>
+</html>

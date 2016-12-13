@@ -1,0 +1,10 @@
+node_modules/*
+
+BeaconClient/platforms/*
+config.private.js
+
+config.js
+
+config.template.js
+2_Client_ServerandFront/node_modules/*
+1_HerokuServer/node_modules/*
